@@ -27,7 +27,7 @@ export const rooms: Room[] = [
     name: "Red Wings",
     location: "By the Window",
     icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/2488175.ics",
-    subcalendarId: 4582645,
+    subcalendarId: 2488175,
     logo: "/logos/red-wings.png",
     capacity: 4,
     locationHint: "On the left hand side of the printer room",
