@@ -58,6 +58,7 @@
   color: var(--ep-text-dim);
 }
 
+/* Room grid */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -157,4 +158,134 @@
   color: rgba(46, 204, 113, 0.6);
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+/* Confirmation step */
+.confirmContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+
+.durationPicker {
+  display: flex;
+  gap: 16px;
+}
+
+.durationBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 20px 32px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: center;
+}
+
+.durationBtn:active {
+  transform: scale(0.97);
+}
+
+.durationActive {
+  border-color: var(--ep-green);
+  background: rgba(46, 204, 113, 0.1);
+  color: var(--ep-text);
+}
+
+.durationMain {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.durationSub {
+  display: block;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 4px;
+  font-family: var(--font-time);
+}
+
+.durationActive .durationSub {
+  color: rgba(46, 204, 113, 0.7);
+}
+
+.confirmActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.confirmBook {
+  background: var(--ep-green);
+  color: #12151f;
+  border: none;
+  padding: 18px 40px;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.confirmBook:active {
+  transform: scale(0.97);
+}
+
+.confirmCancel {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px 16px;
+  font-family: var(--font-body);
+}
+
+/* Success state */
+.successContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.successCheck {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(46, 204, 113, 0.15);
+  border: 3px solid var(--ep-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: var(--ep-green);
+  margin-bottom: 24px;
+}
+
+.successTitle {
+  font-family: var(--font-heading);
+  font-size: 52px;
+  letter-spacing: 4px;
+  font-weight: 400;
+}
+
+.successRoom {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 8px;
+}
+
+.successTime {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 4px;
+  font-family: var(--font-time);
 }

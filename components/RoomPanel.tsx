@@ -52,17 +52,8 @@ export default function RoomPanel({ room }: RoomPanelProps) {
     setTimeout(() => setBookedUntil(null), 3000);
   }
 
-  async function handleFindRoomBook(slug: string) {
-    const startTime = new Date().toISOString();
-    const res = await fetch("/api/book", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, startTime, durationMinutes: 15 }),
-    });
-    if (res.ok) {
-      setShowFindRoom(false);
-      fetchStatus();
-    }
+  function handleFindRoomBooked() {
+    fetchStatus();
   }
 
   if (!status) {
@@ -144,8 +135,7 @@ export default function RoomPanel({ room }: RoomPanelProps) {
       {showFindRoom && (
         <FindRoomOverlay
           currentSlug={room.slug}
-          durationMinutes={15}
-          onBook={handleFindRoomBook}
+          onBooked={handleFindRoomBooked}
           onClose={() => setShowFindRoom(false)}
         />
       )}
