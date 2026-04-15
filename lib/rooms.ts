@@ -36,7 +36,7 @@ export const rooms: Room[] = [
   {
     slug: "johan-nilsson",
     name: "Johan Nilsson",
-    location: "",
+    location: "Bookable workstation",
     icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/15510123.ics",
     subcalendarId: 15510123,
     logo: "/logos/nilsson.jpg",
