@@ -16,7 +16,12 @@ export async function GET(
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
 
-  const events = await fetchTodayEvents(room.icsUrl);
+  let events: import("@/lib/types").CalendarEvent[];
+  try {
+    events = await fetchTodayEvents(room.icsUrl);
+  } catch {
+    events = [];
+  }
   const now = new Date();
 
   // Find current event

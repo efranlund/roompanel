@@ -10,24 +10,35 @@ export async function GET() {
 
   const statuses: RoomStatus[] = await Promise.all(
     rooms.map(async (room) => {
-      const events = await fetchTodayEvents(room.icsUrl);
+      try {
+        const events = await fetchTodayEvents(room.icsUrl);
 
-      const currentEvent =
-        events.find(
-          (e) => new Date(e.start) <= now && new Date(e.end) > now
-        ) || null;
+        const currentEvent =
+          events.find(
+            (e) => new Date(e.start) <= now && new Date(e.end) > now
+          ) || null;
 
-      const upcomingEvents = events
-        .filter((e) => new Date(e.start) > now)
-        .slice(0, 3);
+        const upcomingEvents = events
+          .filter((e) => new Date(e.start) > now)
+          .slice(0, 3);
 
-      return {
-        room,
-        isAvailable: currentEvent === null,
-        currentEvent,
-        upcomingEvents,
-        occupiedUntil: currentEvent ? currentEvent.end : null,
-      };
+        return {
+          room,
+          isAvailable: currentEvent === null,
+          currentEvent,
+          upcomingEvents,
+          occupiedUntil: currentEvent ? currentEvent.end : null,
+        };
+      } catch {
+        // If a single room's ICS feed fails, show it as available with no events
+        return {
+          room,
+          isAvailable: true,
+          currentEvent: null,
+          upcomingEvents: [],
+          occupiedUntil: null,
+        };
+      }
     })
   );
 
