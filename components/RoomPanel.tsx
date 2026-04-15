@@ -6,6 +6,7 @@ import StatusPill from "./StatusPill";
 import MeetingCard from "./MeetingCard";
 import CurrentMeeting from "./CurrentMeeting";
 import BookingButton from "./BookingButton";
+import FindRoomOverlay from "./FindRoomOverlay";
 import styles from "./RoomPanel.module.css";
 
 interface RoomPanelProps {
@@ -15,6 +16,7 @@ interface RoomPanelProps {
 export default function RoomPanel({ room }: RoomPanelProps) {
   const [status, setStatus] = useState<RoomStatus | null>(null);
   const [bookedUntil, setBookedUntil] = useState<string | null>(null);
+  const [showFindRoom, setShowFindRoom] = useState(false);
 
   const fetchStatus = useCallback(async () => {
     const res = await fetch(`/api/calendar/${room.slug}`);
@@ -41,6 +43,19 @@ export default function RoomPanel({ room }: RoomPanelProps) {
     setBookedUntil(until);
     fetchStatus();
     setTimeout(() => setBookedUntil(null), 3000);
+  }
+
+  async function handleFindRoomBook(slug: string) {
+    const startTime = new Date().toISOString();
+    const res = await fetch("/api/book", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, startTime, durationMinutes: 15 }),
+    });
+    if (res.ok) {
+      setShowFindRoom(false);
+      fetchStatus();
+    }
   }
 
   if (!status) {
@@ -71,6 +86,24 @@ export default function RoomPanel({ room }: RoomPanelProps) {
         {isAvailable && (
           <div className={styles.actionRow}>
             <BookingButton roomSlug={room.slug} onBooked={handleBooked} />
+            <button className={styles.findBtn} onClick={() => setShowFindRoom(true)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="21" y2="21" />
+              </svg>
+              Find a Room
+            </button>
+          </div>
+        )}
+        {!isAvailable && (
+          <div className={styles.actionRow}>
+            <button className={styles.findBtn} onClick={() => setShowFindRoom(true)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="16.5" y1="16.5" x2="21" y2="21" />
+              </svg>
+              Find a Room
+            </button>
           </div>
         )}
       </div>
@@ -96,6 +129,15 @@ export default function RoomPanel({ room }: RoomPanelProps) {
         className={styles.epWatermark}
         aria-hidden="true"
       />
+
+      {showFindRoom && (
+        <FindRoomOverlay
+          currentSlug={room.slug}
+          durationMinutes={15}
+          onBook={handleFindRoomBook}
+          onClose={() => setShowFindRoom(false)}
+        />
+      )}
     </div>
   );
 }
