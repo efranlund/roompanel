@@ -15,6 +15,7 @@ interface RoomPanelProps {
 }
 
 export default function RoomPanel({ room }: RoomPanelProps) {
+  const [now, setNow] = useState(new Date());
   const [status, setStatus] = useState<RoomStatus | null>(null);
   const [bookedUntil, setBookedUntil] = useState<string | null>(null);
   const [showFindRoom, setShowFindRoom] = useState(false);
@@ -26,6 +27,11 @@ export default function RoomPanel({ room }: RoomPanelProps) {
       setStatus(data);
     }
   }, [room.slug]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 10_000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Poll every 30 seconds
   useEffect(() => {
@@ -121,6 +127,10 @@ export default function RoomPanel({ room }: RoomPanelProps) {
             <p className={styles.noEvents}>No more meetings today</p>
           )}
         </div>
+      </div>
+
+      <div className={styles.clock}>
+        {now.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })}
       </div>
 
       {/* EP logo watermark */}

@@ -1,0 +1,140 @@
+.panel {
+  width: 1920px;
+  height: 1200px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 80px;
+  gap: 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+.available {
+  background: var(--gradient-available);
+}
+
+.occupied {
+  background: var(--gradient-occupied);
+}
+
+.loading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--ep-text-dim);
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.logoContainer {
+  width: 160px;
+  height: 160px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.logo {
+  width: 75%;
+  height: 75%;
+  object-fit: contain;
+}
+
+.roomName {
+  font-family: var(--font-heading);
+  font-size: 72px;
+  letter-spacing: 4px;
+  line-height: 1;
+  margin-bottom: 8px;
+  font-weight: 400;
+}
+
+.roomLocation {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 40px;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+.scheduleLabel {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
+}
+
+.meetingList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.noEvents {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 16px;
+}
+
+.epWatermark {
+  position: absolute;
+  right: 40px;
+  bottom: 30px;
+  width: 280px;
+  height: 280px;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.actionRow {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.findBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(224, 90, 71, 0.15);
+  border: 1px solid rgba(224, 90, 71, 0.3);
+  color: var(--ep-coral-light);
+  padding: 20px 28px;
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: var(--glass-blur);
+  font-family: var(--font-body);
+}
+
+.findBtn:active {
+  transform: scale(0.98);
+}
+
+.clock {
+  position: absolute;
+  top: 48px;
+  right: 80px;
+  font-family: var(--font-time);
+  font-size: 32px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.4);
+}
