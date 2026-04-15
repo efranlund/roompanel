@@ -34,11 +34,14 @@
 
 html,
 body {
-  width: 1920px;
-  height: 1200px;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
+  background: #12151f;
   background: var(--ep-dark);
+  color: #f0ece4;
   color: var(--ep-text);
+  font-family: "DM Sans", sans-serif;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

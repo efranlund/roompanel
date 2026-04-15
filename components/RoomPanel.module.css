@@ -1,6 +1,6 @@
 .panel {
-  width: 1920px;
-  height: 1200px;
+  width: 100vw;
+  height: 100vh;
   display: grid;
   grid-template-columns: 1fr 1fr;
   padding: 80px;
@@ -41,7 +41,7 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 32px;
-  backdrop-filter: var(--glass-blur);
+
   border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
 }
@@ -121,7 +121,7 @@
   font-size: 17px;
   font-weight: 600;
   cursor: pointer;
-  backdrop-filter: var(--glass-blur);
+
   font-family: var(--font-body);
 }
 

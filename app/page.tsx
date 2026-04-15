@@ -5,8 +5,8 @@ export default function Home() {
   return (
     <div
       style={{
-        width: "1920px",
-        height: "1200px",
+        width: "100vw",
+        height: "100vh",
         background: "var(--gradient-available)",
         display: "flex",
         flexDirection: "column",

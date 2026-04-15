@@ -10,7 +10,7 @@
   font-size: 18px;
   font-weight: 600;
   cursor: pointer;
-  backdrop-filter: var(--glass-blur);
+
   font-family: var(--font-body);
   text-align: left;
 }
@@ -51,7 +51,7 @@
   cursor: pointer;
   font-family: var(--font-body);
   text-align: center;
-  backdrop-filter: var(--glass-blur);
+
 }
 
 .durationBtn:active {
