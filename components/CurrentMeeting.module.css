@@ -1,0 +1,43 @@
+.container {
+  margin-top: 32px;
+  background: rgba(231, 76, 60, 0.08);
+  border: 1px solid rgba(231, 76, 60, 0.15);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: rgba(231, 76, 60, 0.6);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.time {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 6px;
+  font-family: var(--font-time);
+}
+
+.barTrack {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ep-red), var(--ep-coral));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
