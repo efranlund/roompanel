@@ -135,7 +135,7 @@ export default function RoomPanel({ room }: RoomPanelProps) {
 
       {/* EP logo watermark */}
       <img
-        src="/logos/ep-logo.svg"
+        src="/logos/ep-logo.jpg"
         alt=""
         className={styles.epWatermark}
         aria-hidden="true"
