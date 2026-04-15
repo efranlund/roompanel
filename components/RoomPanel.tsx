@@ -7,6 +7,7 @@ import MeetingCard from "./MeetingCard";
 import CurrentMeeting from "./CurrentMeeting";
 import BookingButton from "./BookingButton";
 import FindRoomOverlay from "./FindRoomOverlay";
+import BookingConfirmation from "./BookingConfirmation";
 import styles from "./RoomPanel.module.css";
 
 interface RoomPanelProps {
@@ -138,6 +139,7 @@ export default function RoomPanel({ room }: RoomPanelProps) {
           onClose={() => setShowFindRoom(false)}
         />
       )}
+      {bookedUntil && <BookingConfirmation bookedUntil={bookedUntil} />}
     </div>
   );
 }
