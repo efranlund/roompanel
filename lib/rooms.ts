@@ -34,8 +34,8 @@ export const rooms: Room[] = [
     logo: "/logos/red-wings.png",
   },
   {
-    slug: "nilsson",
-    name: "Nilsson",
+    slug: "johan-nilsson",
+    name: "Johan Nilsson",
     location: "",
     icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/15510123.ics",
     subcalendarId: 15510123,
