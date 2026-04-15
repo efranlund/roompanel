@@ -4,7 +4,7 @@ export const rooms: Room[] = [
   {
     slug: "blackhawks",
     name: "Blackhawks",
-    location: "New Room",
+    location: "",
     icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/14997684.ics",
     subcalendarId: 14997684,
     logo: "/logos/blackhawks.png",
@@ -12,7 +12,7 @@ export const rooms: Room[] = [
   {
     slug: "bruins",
     name: "Bruins",
-    location: "Corner Room",
+    location: "",
     icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/2488173.ics",
     subcalendarId: 2488173,
     logo: "/logos/bruins.png",
@@ -20,7 +20,7 @@ export const rooms: Room[] = [
   {
     slug: "maple-leafs",
     name: "Maple Leafs",
-    location: "Behind Kitchen",
+    location: "",
     icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/4582646.ics",
     subcalendarId: 4582646,
     logo: "/logos/maple-leafs.png",
@@ -33,6 +33,14 @@ export const rooms: Room[] = [
     subcalendarId: 4582645,
     logo: "/logos/red-wings.png",
   },
+  {
+    slug: "nilsson",
+    name: "Nilsson",
+    location: "",
+    icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/15510123.ics",
+    subcalendarId: 15510123,
+    logo: "/logos/nilsson.jpg",
+  }
 ];
 
 export function getRoomBySlug(slug: string): Room | undefined {
