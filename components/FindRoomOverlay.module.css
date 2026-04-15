@@ -6,7 +6,7 @@
   height: 100vh;
   background: var(--gradient-overlay);
   z-index: 100;
-  padding: 60px 80px;
+  padding: 36px 60px;
   display: flex;
   flex-direction: column;
 }
@@ -15,27 +15,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .title {
   font-family: var(--font-heading);
-  font-size: 48px;
+  font-size: 36px;
   letter-spacing: 3px;
   font-weight: 400;
 }
 
 .closeBtn {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.5);
-  font-size: 24px;
+  font-size: 22px;
   cursor: pointer;
 }
 
@@ -44,9 +44,9 @@
 }
 
 .subtitle {
-  font-size: 18px;
+  font-size: 15px;
   color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 48px;
+  margin-bottom: 24px;
 }
 
 .loading {
@@ -60,16 +60,17 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
   flex: 1;
+  min-height: 0;
 }
 
 .roomCard {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  padding: 36px;
+  border-radius: 16px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -103,14 +104,14 @@
 }
 
 .roomLogo {
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   overflow: hidden;
 }
 
@@ -122,19 +123,19 @@
 
 .roomName {
   font-family: var(--font-heading);
-  font-size: 28px;
+  font-size: 24px;
   letter-spacing: 2px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .roomLocation {
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.35);
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .roomStatus {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -151,8 +152,8 @@
 }
 
 .tapLabel {
-  margin-top: 12px;
-  font-size: 12px;
+  margin-top: 8px;
+  font-size: 11px;
   color: rgba(46, 204, 113, 0.6);
   text-transform: uppercase;
   letter-spacing: 1px;
