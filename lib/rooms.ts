@@ -1,16 +1,7 @@
 import { Room } from "./types";
 
 export const rooms: Room[] = [
-  {
-    slug: "blackhawks",
-    name: "Blackhawks",
-    location: "",
-    icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/14997684.ics",
-    subcalendarId: 14997684,
-    logo: "/logos/blackhawks.png",
-    capacity: 6,
-    locationHint: "Enter from reception, first door on the left",
-  },
+  
   {
     slug: "bruins",
     name: "Bruins",
@@ -18,8 +9,8 @@ export const rooms: Room[] = [
     icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/2488173.ics",
     subcalendarId: 2488173,
     logo: "/logos/bruins.png",
-    capacity: 4,
-    locationHint: "Corner room, past the kitchen",
+    capacity: 12,
+    locationHint: "Corner room, near the kitchen",
   },
   {
     slug: "maple-leafs",
@@ -29,7 +20,7 @@ export const rooms: Room[] = [
     subcalendarId: 4582646,
     logo: "/logos/maple-leafs.png",
     capacity: 6,
-    locationHint: "Behind the kitchen area",
+    locationHint: "Smaller room near the kitchen area",
   },
   {
     slug: "red-wings",
@@ -39,7 +30,7 @@ export const rooms: Room[] = [
     subcalendarId: 4582645,
     logo: "/logos/red-wings.png",
     capacity: 4,
-    locationHint: "By the window, near the open office area",
+    locationHint: "On the left hand side of the printer room",
   },
   {
     slug: "johan-nilsson",
@@ -49,7 +40,7 @@ export const rooms: Room[] = [
     subcalendarId: 15510123,
     logo: "/logos/nilsson.jpg",
     capacity: 1,
-    locationHint: "Workstation near the entrance",
+    locationHint: "Workstation near the Yazen area",
   },
 ];
 
