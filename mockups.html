@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1200">
+<title>RoomPanel — Refined Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ep-navy: #1a1e2e;
+    --ep-slate: #2a2f42;
+    --ep-coral: #e05a47;
+    --ep-coral-light: #e8786a;
+    --ep-warm: #c44a3f;
+    --ep-dark: #12151f;
+    --ep-green: #2ecc71;
+    --ep-red: #e74c3c;
+    --ep-text: #f0ece4;
+    --ep-text-dim: #8a8d9a;
+  }
+
+  body {
+    background: #0a0c12;
+    color: var(--ep-text);
+    font-family: 'DM Sans', sans-serif;
+    padding: 40px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 3px;
+    text-align: center;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--ep-text), var(--ep-coral-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--ep-text-dim);
+    font-size: 14px;
+    margin-bottom: 50px;
+  }
+
+  .section {
+    margin-bottom: 60px;
+  }
+
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--ep-coral);
+    margin-bottom: 6px;
+  }
+
+  .section-desc {
+    color: var(--ep-text-dim);
+    font-size: 13px;
+    margin-bottom: 20px;
+    max-width: 900px;
+  }
+
+  /* ===== PANEL FRAME ===== */
+  .panel-frame {
+    width: 960px;
+    height: 600px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+  }
+
+  /* ===== MAIN PANEL: AVAILABLE STATE ===== */
+  .panel-available {
+    background: linear-gradient(135deg, var(--ep-navy) 0%, #2a1f2e 40%, var(--ep-coral) 100%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 48px;
+    gap: 40px;
+  }
+
+  .panel-available .left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .team-logo-area {
+    width: 120px;
+    height: 120px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    overflow: hidden;
+  }
+
+  .team-logo-area img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+  }
+
+  .room-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px;
+    letter-spacing: 3px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .room-location {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 32px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(46, 204, 113, 0.15);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ep-green);
+    width: fit-content;
+  }
+
+  .status-pill.busy {
+    background: rgba(231, 76, 60, 0.15);
+    border-color: rgba(231, 76, 60, 0.3);
+    color: var(--ep-red);
+  }
+
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--ep-green);
+    animation: pulse-dot 2s infinite;
+  }
+
+  .status-dot.busy {
+    background: var(--ep-red);
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(46,204,113,0.4); }
+    50% { opacity: 0.8; box-shadow: 0 0 0 8px rgba(46,204,113,0); }
+  }
+
+  /* Action buttons row */
+  .action-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .book-btn {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 16px 28px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .book-btn .btn-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .book-btn .btn-sub {
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.5);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .find-btn {
+    background: rgba(224, 90, 71, 0.15);
+    border: 1px solid rgba(224, 90, 71, 0.3);
+    color: var(--ep-coral-light);
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .find-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--ep-coral-light);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .panel-available .right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .schedule-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 4px;
+  }
+
+  .meeting-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+
+  .meeting-time {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 4px;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .meeting-title {
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .meeting-organizer {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 4px;
+  }
+
+  /* EP Logo watermark */
+  .ep-watermark {
+    position: absolute;
+    right: -20px;
+    bottom: -30px;
+    width: 280px;
+    height: 280px;
+    opacity: 0.06;
+    pointer-events: none;
+    border-radius: 48px;
+  }
+
+  /* ===== BUSY STATE ===== */
+  .panel-busy {
+    background: linear-gradient(135deg, #1a1520 0%, #2a1520 40%, #4a1a1a 100%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 48px;
+    gap: 40px;
+  }
+
+  .panel-busy .current-meeting {
+    margin-top: 24px;
+    background: rgba(231,76,60,0.08);
+    border: 1px solid rgba(231,76,60,0.15);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+
+  .panel-busy .current-meeting .cm-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(231,76,60,0.6);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .panel-busy .current-meeting .cm-title {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .panel-busy .current-meeting .cm-time {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .panel-busy .current-meeting .cm-bar-track {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    margin-top: 12px;
+    overflow: hidden;
+  }
+
+  .panel-busy .current-meeting .cm-bar-fill {
+    height: 100%;
+    width: 65%;
+    background: linear-gradient(90deg, var(--ep-red), var(--ep-coral));
+    border-radius: 4px;
+  }
+
+  /* ===== FIND ROOM OVERLAY ===== */
+  .panel-find {
+    background: linear-gradient(135deg, var(--ep-navy) 0%, #1e1a28 50%, #2a1f2e 100%);
+    padding: 40px 48px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .find-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .find-header h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 2px;
+  }
+
+  .find-close {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .find-subtitle {
+    font-size: 14px;
+    color: rgba(255,255,255,0.4);
+    margin-top: -24px;
+    margin-bottom: 28px;
+  }
+
+  .room-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .room-option {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .room-option.available {
+    border-color: rgba(46, 204, 113, 0.2);
+    background: rgba(46, 204, 113, 0.05);
+  }
+
+  .room-option.unavailable {
+    opacity: 0.4;
+  }
+
+  .room-option .ro-logo {
+    width: 56px;
+    height: 56px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+
+  .room-option .ro-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .room-option .ro-location {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 10px;
+  }
+
+  .room-option .ro-status {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .room-option.available .ro-status {
+    color: var(--ep-green);
+  }
+
+  .room-option.unavailable .ro-status {
+    color: rgba(255,255,255,0.3);
+  }
+
+  .room-option .ro-tap {
+    margin-top: 10px;
+    font-size: 11px;
+    color: rgba(46, 204, 113, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* EP logo inline SVG for watermark */
+  .ep-logo-svg {
+    position: absolute;
+    right: 20px;
+    bottom: 16px;
+    opacity: 0.05;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<h1>ROOMPANEL — REFINED DESIGN</h1>
+<p class="subtitle">Approach A: Immersive Status Wall · Updated with feedback</p>
+
+<!-- ===== STATE 1: AVAILABLE ===== -->
+<div class="section">
+  <div class="section-label">STATE: AVAILABLE</div>
+  <p class="section-desc">Room is free. "Book 15 min" creates an instant reservation. "Find a Room" searches all other rooms for a free 15-min slot.</p>
+
+  <div class="panel-frame panel-available">
+    <div class="left">
+      <div class="team-logo-area">
+        <!-- Placeholder for team logo -->
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+          <circle cx="36" cy="36" r="30" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+          <text x="36" y="42" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="Bebas Neue" font-size="24">LOGO</text>
+        </svg>
+      </div>
+      <div class="room-name">BLACKHAWKS</div>
+      <div class="room-location">New Room</div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        Available
+      </div>
+      <div class="action-row">
+        <div class="book-btn">
+          <span class="btn-icon">+</span>
+          <div>
+            <span>Book 15 min</span>
+            <span class="btn-sub">14:32 — 14:47</span>
+          </div>
+        </div>
+        <div class="find-btn">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          Find a Room
+        </div>
+      </div>
+    </div>
+    <div class="right">
+      <div class="schedule-label">Upcoming Today</div>
+      <div class="meeting-card">
+        <div class="meeting-time">15:00 — 16:00</div>
+        <div class="meeting-title">Sprint Planning</div>
+        <div class="meeting-organizer">Erik Johansson</div>
+      </div>
+      <div class="meeting-card">
+        <div class="meeting-time">16:30 — 17:00</div>
+        <div class="meeting-title">Design Review</div>
+        <div class="meeting-organizer">Anna Lindström</div>
+      </div>
+    </div>
+
+    <!-- EP Logo watermark in bottom-right -->
+    <svg class="ep-logo-svg" width="240" height="240" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="22" fill="white"/>
+      <text x="18" y="76" font-family="DM Sans, sans-serif" font-weight="800" font-size="72" fill="#1a1e2e">e</text>
+      <text x="52" y="76" font-family="DM Sans, sans-serif" font-weight="800" font-size="72" fill="#e05a47">p</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ===== STATE 2: BUSY ===== -->
+<div class="section">
+  <div class="section-label">STATE: OCCUPIED</div>
+  <p class="section-desc">Room is in a meeting. Shows progress bar for current meeting. Gradient shifts to darker, more muted tones. "Find a Room" becomes the primary action — find somewhere else.</p>
+
+  <div class="panel-frame panel-busy">
+    <div class="left">
+      <div class="team-logo-area">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+          <circle cx="36" cy="36" r="30" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+          <text x="36" y="42" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-family="Bebas Neue" font-size="24">LOGO</text>
+        </svg>
+      </div>
+      <div class="room-name">BLACKHAWKS</div>
+      <div class="room-location">New Room</div>
+      <div class="status-pill busy">
+        <div class="status-dot busy"></div>
+        Occupied until 15:00
+      </div>
+
+      <div class="current-meeting">
+        <div class="cm-label">Now</div>
+        <div class="cm-title">Sprint Planning</div>
+        <div class="cm-time">14:00 — 15:00 · Erik Johansson</div>
+        <div class="cm-bar-track">
+          <div class="cm-bar-fill"></div>
+        </div>
+      </div>
+
+      <div class="action-row" style="margin-top: 20px;">
+        <div class="find-btn">
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--ep-coral-light);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          Find a Room
+        </div>
+      </div>
+    </div>
+    <div class="right" style="display:flex;flex-direction:column;justify-content:center;gap:16px;">
+      <div class="schedule-label">Up Next</div>
+      <div class="meeting-card">
+        <div class="meeting-time">16:30 — 17:00</div>
+        <div class="meeting-title">Design Review</div>
+        <div class="meeting-organizer">Anna Lindström</div>
+      </div>
+      <div class="meeting-card">
+        <div class="meeting-time">17:30 — 18:00</div>
+        <div class="meeting-title">1:1 with Marcus</div>
+        <div class="meeting-organizer">Marcus Berg</div>
+      </div>
+    </div>
+
+    <svg class="ep-logo-svg" width="240" height="240" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="22" fill="white"/>
+      <text x="18" y="76" font-family="DM Sans, sans-serif" font-weight="800" font-size="72" fill="#1a1e2e">e</text>
+      <text x="52" y="76" font-family="DM Sans, sans-serif" font-weight="800" font-size="72" fill="#e05a47">p</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ===== STATE 3: FIND A ROOM OVERLAY ===== -->
+<div class="section">
+  <div class="section-label">OVERLAY: FIND A ROOM</div>
+  <p class="section-desc">Tap "Find a Room" → shows all 6 rooms with live availability. Green rooms have a free 15-min slot right now. Tap one to instantly book it. Greyed-out rooms are busy.</p>
+
+  <div class="panel-frame panel-find">
+    <div class="find-header">
+      <h2>FIND A ROOM — 15 MIN</h2>
+      <div class="find-close">✕</div>
+    </div>
+    <div class="find-subtitle">Available rooms for 14:32 — 14:47</div>
+
+    <div class="room-grid">
+      <div class="room-option available">
+        <div class="ro-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="12" stroke="rgba(46,204,113,0.4)" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="ro-name">BRUINS</div>
+        <div class="ro-location">Corner Room</div>
+        <div class="ro-status">Available</div>
+        <div class="ro-tap">Tap to book</div>
+      </div>
+
+      <div class="room-option unavailable">
+        <div class="ro-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="12" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="ro-name">CANADIENS</div>
+        <div class="ro-location">The Studio</div>
+        <div class="ro-status">Busy until 15:30</div>
+      </div>
+
+      <div class="room-option available">
+        <div class="ro-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="12" stroke="rgba(46,204,113,0.4)" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="ro-name">MAPLE LEAFS</div>
+        <div class="ro-location">Behind Kitchen</div>
+        <div class="ro-status">Available</div>
+        <div class="ro-tap">Tap to book</div>
+      </div>
+
+      <div class="room-option available">
+        <div class="ro-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="12" stroke="rgba(46,204,113,0.4)" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="ro-name">RED WINGS</div>
+        <div class="ro-location">By the Window</div>
+        <div class="ro-status">Available</div>
+        <div class="ro-tap">Tap to book</div>
+      </div>
+
+      <div class="room-option unavailable">
+        <div class="ro-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="12" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="ro-name">TRE KRONOR</div>
+        <div class="ro-location">The Big Room</div>
+        <div class="ro-status">Busy until 16:00</div>
+      </div>
+
+      <div class="room-option" style="border-style: dashed; border-color: rgba(255,255,255,0.1); background: transparent; opacity: 0.3;">
+        <div class="ro-logo" style="opacity: 0.5;">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="12" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-dasharray="4 4"/>
+          </svg>
+        </div>
+        <div class="ro-name" style="color: rgba(255,255,255,0.25);">BLACKHAWKS</div>
+        <div class="ro-location">You are here</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
