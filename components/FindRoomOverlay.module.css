@@ -330,3 +330,29 @@
   align-items: center;
   gap: 8px;
 }
+
+.errorBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(231, 76, 60, 0.12);
+  border: 1px solid rgba(231, 76, 60, 0.25);
+  color: #e74c3c;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: var(--font-body);
+}
+
+.errorIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(231, 76, 60, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}

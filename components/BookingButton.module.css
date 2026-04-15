@@ -88,3 +88,29 @@
   font-family: var(--font-body);
   font-size: 14px;
 }
+
+.errorBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(231, 76, 60, 0.12);
+  border: 1px solid rgba(231, 76, 60, 0.25);
+  color: var(--ep-red);
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-family: var(--font-body);
+}
+
+.errorIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(231, 76, 60, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}

@@ -55,7 +55,24 @@ export async function POST(request: Request) {
       bookedUntil: end.toISOString(),
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 502 });
+    const raw = err instanceof Error ? err.message : "Unknown error";
+
+    // Parse TeamUp error JSON from the message if present
+    let userMessage = "Booking failed. Please try again.";
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        const teamupMsg = parsed?.error?.message || parsed?.error?.title;
+        if (teamupMsg) {
+          // Strip HTML tags from TeamUp error messages
+          userMessage = teamupMsg.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        }
+      } catch {
+        // Use default message
+      }
+    }
+
+    return NextResponse.json({ error: userMessage }, { status: 502 });
   }
 }

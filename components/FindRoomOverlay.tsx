@@ -34,6 +34,7 @@ export default function FindRoomOverlay({
   const [loading, setLoading] = useState(true);
   const [state, setState] = useState<OverlayState>({ step: "grid" });
   const [selectedDuration, setSelectedDuration] = useState<number>(15);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchAll() {
@@ -49,21 +50,32 @@ export default function FindRoomOverlay({
 
   async function handleBook(slug: string, minutes: number) {
     setState({ step: "booking" });
+    setError(null);
     const startTime = new Date().toISOString();
-    const res = await fetch("/api/book", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, startTime, durationMinutes: minutes }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const roomName =
-        statuses.find((s) => s.room.slug === slug)?.room.name || slug;
-      setState({ step: "success", slug, roomName, bookedUntil: data.bookedUntil });
-      onBooked();
-      setTimeout(onClose, 5000);
-    } else {
-      setState({ step: "grid" });
+    try {
+      const res = await fetch("/api/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, startTime, durationMinutes: minutes }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const roomName =
+          statuses.find((s) => s.room.slug === slug)?.room.name || slug;
+        setState({ step: "success", slug, roomName, bookedUntil: data.bookedUntil });
+        onBooked();
+        setTimeout(onClose, 5000);
+      } else {
+        const data = await res.json().catch(() => null);
+        const msg = data?.error || "Booking failed. Please try again.";
+        setError(msg);
+        setState({ step: "confirm", slug, roomName: statuses.find((s) => s.room.slug === slug)?.room.name || slug });
+        setTimeout(() => setError(null), 5000);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+      setState({ step: "confirm", slug, roomName: statuses.find((s) => s.room.slug === slug)?.room.name || slug });
+      setTimeout(() => setError(null), 5000);
     }
   }
 
@@ -124,6 +136,12 @@ export default function FindRoomOverlay({
         </p>
 
         <div className={styles.confirmContainer}>
+          {error && (
+            <div className={styles.errorBox}>
+              <span className={styles.errorIcon}>!</span>
+              {error}
+            </div>
+          )}
           {room?.locationHint && (
             <div className={styles.locationHintSmall}>
               <span className={styles.locationIcon}>📍</span>

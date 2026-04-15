@@ -20,9 +20,11 @@ function formatTime(date: Date): string {
 export default function BookingButton({ roomSlug, onBooked }: BookingButtonProps) {
   const [expanded, setExpanded] = useState(false);
   const [booking, setBooking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleBook(minutes: number) {
     setBooking(true);
+    setError(null);
     const startTime = new Date().toISOString();
 
     try {
@@ -39,15 +41,31 @@ export default function BookingButton({ roomSlug, onBooked }: BookingButtonProps
       if (res.ok) {
         const data = await res.json();
         onBooked(data.bookedUntil);
+        setExpanded(false);
+      } else {
+        const data = await res.json().catch(() => null);
+        setError(data?.error || "Booking failed. Please try again.");
+        setTimeout(() => setError(null), 5000);
       }
+    } catch {
+      setError("Network error. Please try again.");
+      setTimeout(() => setError(null), 5000);
     } finally {
       setBooking(false);
-      setExpanded(false);
     }
   }
 
   const now = new Date();
   const endTime = new Date(now.getTime() + 15 * 60 * 1000);
+
+  if (error) {
+    return (
+      <div className={styles.errorBox}>
+        <span className={styles.errorIcon}>!</span>
+        <span>{error}</span>
+      </div>
+    );
+  }
 
   if (expanded) {
     return (
