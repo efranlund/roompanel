@@ -3,8 +3,8 @@
   height: 100vh;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  padding: 80px;
-  gap: 60px;
+  padding: 48px 60px;
+  gap: 40px;
   position: relative;
   overflow: hidden;
 }
@@ -30,20 +30,21 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-height: 0;
 }
 
 .logoContainer {
-  width: 160px;
-  height: 160px;
+  width: 120px;
+  height: 120px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 28px;
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 32px;
-
+  margin-bottom: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .logo {
@@ -54,38 +55,39 @@
 
 .roomName {
   font-family: var(--font-heading);
-  font-size: 72px;
-  letter-spacing: 4px;
+  font-size: 56px;
+  letter-spacing: 3px;
   line-height: 1;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-weight: 400;
 }
 
 .roomLocation {
-  font-size: 20px;
+  font-size: 16px;
   color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .right {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 20px;
+  gap: 14px;
+  min-height: 0;
 }
 
 .scheduleLabel {
-  font-size: 14px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 3px;
   color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .meetingList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .noEvents {
@@ -95,18 +97,18 @@
 
 .epWatermark {
   position: absolute;
-  right: 40px;
-  bottom: 30px;
-  width: 280px;
-  height: 280px;
+  right: 30px;
+  bottom: 20px;
+  width: 200px;
+  height: 200px;
   opacity: 0.05;
   pointer-events: none;
 }
 
 .actionRow {
   display: flex;
-  gap: 16px;
-  margin-top: 32px;
+  gap: 12px;
+  margin-top: 20px;
 }
 
 .findBtn {
@@ -116,12 +118,11 @@
   background: rgba(224, 90, 71, 0.15);
   border: 1px solid rgba(224, 90, 71, 0.3);
   color: var(--ep-coral-light);
-  padding: 20px 28px;
-  border-radius: 16px;
-  font-size: 17px;
+  padding: 16px 22px;
+  border-radius: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-
   font-family: var(--font-body);
 }
 
@@ -131,10 +132,10 @@
 
 .clock {
   position: absolute;
-  top: 48px;
-  right: 80px;
+  top: 32px;
+  right: 60px;
   font-family: var(--font-time);
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 300;
   color: rgba(255, 255, 255, 0.4);
 }

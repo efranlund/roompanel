@@ -1,9 +1,9 @@
 .container {
-  margin-top: 32px;
+  margin-top: 20px;
   background: rgba(231, 76, 60, 0.08);
   border: 1px solid rgba(231, 76, 60, 0.15);
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 14px;
+  padding: 18px;
 }
 
 .label {
@@ -16,7 +16,7 @@
 }
 
 .title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
 }
 
