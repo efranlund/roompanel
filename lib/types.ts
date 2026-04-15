@@ -5,6 +5,8 @@ export interface Room {
   icsUrl: string;
   subcalendarId: number;
   logo: string; // path to /logos/{file}
+  capacity: number; // number of seats
+  locationHint: string; // directions to find the room
 }
 
 export interface CalendarEvent {

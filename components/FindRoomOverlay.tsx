@@ -23,7 +23,7 @@ type OverlayState =
   | { step: "grid" }
   | { step: "confirm"; slug: string; roomName: string }
   | { step: "booking" }
-  | { step: "success"; roomName: string; bookedUntil: string };
+  | { step: "success"; slug: string; roomName: string; bookedUntil: string };
 
 export default function FindRoomOverlay({
   currentSlug,
@@ -57,10 +57,11 @@ export default function FindRoomOverlay({
     });
     if (res.ok) {
       const data = await res.json();
-      const roomName = statuses.find((s) => s.room.slug === slug)?.room.name || slug;
-      setState({ step: "success", roomName, bookedUntil: data.bookedUntil });
+      const roomName =
+        statuses.find((s) => s.room.slug === slug)?.room.name || slug;
+      setState({ step: "success", slug, roomName, bookedUntil: data.bookedUntil });
       onBooked();
-      setTimeout(onClose, 3000);
+      setTimeout(onClose, 5000);
     } else {
       setState({ step: "grid" });
     }
@@ -68,9 +69,10 @@ export default function FindRoomOverlay({
 
   const now = new Date();
 
-  // Success state
+  // Success state — show confirmation + location hint
   if (state.step === "success") {
     const time = formatTime(new Date(state.bookedUntil));
+    const room = statuses.find((s) => s.room.slug === state.slug)?.room;
     return (
       <div className={styles.overlay}>
         <div className={styles.successContainer}>
@@ -78,6 +80,12 @@ export default function FindRoomOverlay({
           <div className={styles.successTitle}>BOOKED</div>
           <div className={styles.successRoom}>{state.roomName}</div>
           <div className={styles.successTime}>until {time}</div>
+          {room?.locationHint && (
+            <div className={styles.locationHint}>
+              <span className={styles.locationIcon}>📍</span>
+              {room.locationHint}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -96,6 +104,7 @@ export default function FindRoomOverlay({
 
   // Confirmation step — pick duration and confirm
   if (state.step === "confirm") {
+    const room = statuses.find((s) => s.room.slug === state.slug)?.room;
     const endTime = new Date(now.getTime() + selectedDuration * 60 * 1000);
     return (
       <div className={styles.overlay}>
@@ -103,7 +112,10 @@ export default function FindRoomOverlay({
           <h2 className={styles.title}>
             BOOK {state.roomName.toUpperCase()}
           </h2>
-          <button className={styles.closeBtn} onClick={() => setState({ step: "grid" })}>
+          <button
+            className={styles.closeBtn}
+            onClick={() => setState({ step: "grid" })}
+          >
             ←
           </button>
         </div>
@@ -112,6 +124,13 @@ export default function FindRoomOverlay({
         </p>
 
         <div className={styles.confirmContainer}>
+          {room?.locationHint && (
+            <div className={styles.locationHintSmall}>
+              <span className={styles.locationIcon}>📍</span>
+              {room.locationHint}
+            </div>
+          )}
+
           <div className={styles.durationPicker}>
             {DURATIONS.map((d) => {
               const end = new Date(now.getTime() + d * 60 * 1000);
@@ -122,7 +141,9 @@ export default function FindRoomOverlay({
                   onClick={() => setSelectedDuration(d)}
                 >
                   <span className={styles.durationMain}>{d} min</span>
-                  <span className={styles.durationSub}>until {formatTime(end)}</span>
+                  <span className={styles.durationSub}>
+                    until {formatTime(end)}
+                  </span>
                 </button>
               );
             })}
@@ -147,7 +168,7 @@ export default function FindRoomOverlay({
     );
   }
 
-  // Grid step — room list
+  // Grid step — room list as rows
   return (
     <div className={styles.overlay}>
       <div className={styles.header}>
@@ -156,14 +177,12 @@ export default function FindRoomOverlay({
           ✕
         </button>
       </div>
-      <p className={styles.subtitle}>
-        Tap a room to book it
-      </p>
+      <p className={styles.subtitle}>Tap a room to book it</p>
 
       {loading ? (
         <div className={styles.loading}>Checking rooms...</div>
       ) : (
-        <div className={styles.grid}>
+        <div className={styles.roomList}>
           {statuses.map((s) => {
             const isCurrent = s.room.slug === currentSlug;
             const isAvailable = s.room.slug !== currentSlug && s.isAvailable;
@@ -174,39 +193,54 @@ export default function FindRoomOverlay({
             return (
               <button
                 key={s.room.slug}
-                className={`${styles.roomCard} ${
+                className={`${styles.roomRow} ${
                   isCurrent
-                    ? styles.current
+                    ? styles.rowCurrent
                     : isAvailable
-                    ? styles.roomAvailable
-                    : styles.roomBusy
+                    ? styles.rowAvailable
+                    : styles.rowBusy
                 }`}
                 onClick={() =>
                   isAvailable &&
-                  setState({ step: "confirm", slug: s.room.slug, roomName: s.room.name })
+                  setState({
+                    step: "confirm",
+                    slug: s.room.slug,
+                    roomName: s.room.name,
+                  })
                 }
                 disabled={!isAvailable}
               >
-                <div className={styles.roomLogo}>
+                <div className={styles.rowLogo}>
                   <img
                     src={s.room.logo}
                     alt={s.room.name}
-                    className={styles.roomLogoImg}
+                    className={styles.rowLogoImg}
                   />
                 </div>
-                <div className={styles.roomName}>
-                  {s.room.name.toUpperCase()}
+                <div className={styles.rowInfo}>
+                  <div className={styles.rowName}>
+                    {s.room.name.toUpperCase()}
+                  </div>
+                  {s.room.location && (
+                    <div className={styles.rowLocation}>{s.room.location}</div>
+                  )}
                 </div>
-                <div className={styles.roomLocation}>{s.room.location}</div>
-                <div className={styles.roomStatus}>
-                  {isCurrent
-                    ? "You are here"
-                    : isAvailable
-                    ? "Available"
-                    : `Busy until ${busyUntil}`}
+                <div className={styles.rowCapacity}>
+                  {s.room.capacity} {s.room.capacity === 1 ? "seat" : "seats"}
+                </div>
+                <div className={styles.rowStatus}>
+                  {isCurrent ? (
+                    <span className={styles.rowStatusCurrent}>You are here</span>
+                  ) : isAvailable ? (
+                    <span className={styles.rowStatusAvailable}>Available</span>
+                  ) : (
+                    <span className={styles.rowStatusBusy}>
+                      Busy until {busyUntil}
+                    </span>
+                  )}
                 </div>
                 {isAvailable && (
-                  <div className={styles.tapLabel}>Tap to book</div>
+                  <div className={styles.rowArrow}>→</div>
                 )}
               </button>
             );
