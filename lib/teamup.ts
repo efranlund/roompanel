@@ -18,6 +18,11 @@ interface TeamUpEventResponse {
   };
 }
 
+// TeamUp requires ISO 8601 without milliseconds, with offset instead of Z
+function toTeamUpDate(iso: string): string {
+  return iso.replace(/\.\d{3}Z$/, "+00:00").replace(/Z$/, "+00:00");
+}
+
 export async function createEvent(params: CreateEventParams): Promise<TeamUpEventResponse> {
   const apiKey = process.env.TEAMUP_API_KEY;
   if (!apiKey) {
@@ -35,8 +40,8 @@ export async function createEvent(params: CreateEventParams): Promise<TeamUpEven
       body: JSON.stringify({
         subcalendar_ids: [params.subcalendarId],
         title: params.title,
-        start_dt: params.startDt,
-        end_dt: params.endDt,
+        start_dt: toTeamUpDate(params.startDt),
+        end_dt: toTeamUpDate(params.endDt),
       }),
     }
   );

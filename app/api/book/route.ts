@@ -40,17 +40,22 @@ export async function POST(request: Request) {
   const start = new Date(startTime);
   const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
 
-  const result = await createEvent({
-    calendarKey,
-    subcalendarId: room.subcalendarId,
-    title: `Quick Booking (${durationMinutes} min)`,
-    startDt: start.toISOString(),
-    endDt: end.toISOString(),
-  });
+  try {
+    const result = await createEvent({
+      calendarKey,
+      subcalendarId: room.subcalendarId,
+      title: `Quick Booking (${durationMinutes} min)`,
+      startDt: start.toISOString(),
+      endDt: end.toISOString(),
+    });
 
-  return NextResponse.json({
-    success: true,
-    event: result.event,
-    bookedUntil: end.toISOString(),
-  });
+    return NextResponse.json({
+      success: true,
+      event: result.event,
+      bookedUntil: end.toISOString(),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
 }
