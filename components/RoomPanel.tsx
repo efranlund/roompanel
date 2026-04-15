@@ -5,6 +5,7 @@ import { Room, RoomStatus } from "@/lib/types";
 import StatusPill from "./StatusPill";
 import MeetingCard from "./MeetingCard";
 import CurrentMeeting from "./CurrentMeeting";
+import BookingButton from "./BookingButton";
 import styles from "./RoomPanel.module.css";
 
 interface RoomPanelProps {
@@ -67,7 +68,11 @@ export default function RoomPanel({ room }: RoomPanelProps) {
         {!isAvailable && status.currentEvent && (
           <CurrentMeeting event={status.currentEvent} />
         )}
-        {/* BookingButton and FindRoom will be added in later tasks */}
+        {isAvailable && (
+          <div className={styles.actionRow}>
+            <BookingButton roomSlug={room.slug} onBooked={handleBooked} />
+          </div>
+        )}
       </div>
 
       <div className={styles.right}>
