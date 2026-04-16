@@ -1,6 +1,20 @@
 import ical, { VEvent } from "node-ical";
 import { CalendarEvent } from "./types";
 
+function resolveTitle(vevent: VEvent): string {
+  const summary =
+    typeof vevent.summary === "string"
+      ? vevent.summary
+      : vevent.summary?.val ?? "Untitled";
+  return summary || "Untitled";
+}
+
+function resolveOrganizer(vevent: VEvent): string {
+  return typeof vevent.organizer === "string"
+    ? vevent.organizer
+    : vevent.organizer?.params?.CN ?? "";
+}
+
 export async function fetchTodayEvents(icsUrl: string): Promise<CalendarEvent[]> {
   const data = await ical.async.fromURL(icsUrl);
 
@@ -16,30 +30,43 @@ export async function fetchTodayEvents(icsUrl: string): Promise<CalendarEvent[]>
     if (entry?.type !== "VEVENT") continue;
 
     const vevent = entry as VEvent;
-    if (!vevent.start || !vevent.end) continue;
 
-    const start = new Date(vevent.start);
-    const end = new Date(vevent.end);
-
-    // Resolve ParameterValue<string> to a plain string
-    const title =
-      typeof vevent.summary === "string"
-        ? vevent.summary
-        : vevent.summary?.val ?? "Untitled";
-
-    const organizer =
-      typeof vevent.organizer === "string"
-        ? vevent.organizer
-        : vevent.organizer?.params?.CN ?? "";
-
-    // Include events that overlap with today
-    if (end > startOfDay && start < endOfDay) {
-      events.push({
-        title: title || "Untitled",
-        start: start.toISOString(),
-        end: end.toISOString(),
-        organizer,
+    if (vevent.rrule) {
+      // Expand recurring event into individual instances for today
+      const instances = ical.expandRecurringEvent(vevent, {
+        from: startOfDay,
+        to: endOfDay,
+        includeOverrides: true,
+        excludeExdates: true,
+        expandOngoing: true,
       });
+
+      for (const instance of instances) {
+        const start = new Date(instance.start);
+        const end = new Date(instance.end);
+
+        events.push({
+          title: resolveTitle(instance.event),
+          start: start.toISOString(),
+          end: end.toISOString(),
+          organizer: resolveOrganizer(instance.event),
+        });
+      }
+    } else {
+      if (!vevent.start || !vevent.end) continue;
+
+      const start = new Date(vevent.start);
+      const end = new Date(vevent.end);
+
+      // Include non-recurring events that overlap with today
+      if (end > startOfDay && start < endOfDay) {
+        events.push({
+          title: resolveTitle(vevent),
+          start: start.toISOString(),
+          end: end.toISOString(),
+          organizer: resolveOrganizer(vevent),
+        });
+      }
     }
   }
 
