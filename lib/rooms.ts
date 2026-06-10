@@ -3,12 +3,12 @@ import { Room } from "./types";
 export const rooms: Room[] = [
   
   {
-    slug: "bruins",
-    name: "Bruins",
+    slug: "nilsson",
+    name: "Nilsson",
     location: "",
     icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/2488173.ics",
     subcalendarId: 2488173,
-    logo: "/logos/bruins.png",
+    logo: "/logos/ep-logo.jpg",
     capacity: 12,
     locationHint: "Corner room, near the kitchen",
   },
@@ -33,12 +33,12 @@ export const rooms: Room[] = [
     locationHint: "On the left hand side of the printer room",
   },
   {
-    slug: "johan-nilsson",
-    name: "Nilsson",
+    slug: "bruins",
+    name: "Bruins",
     location: "Bookable workstation",
     icsUrl: "https://ics.teamup.com/feed/ks9ij6x9n1dcou9pjz/15510123.ics",
     subcalendarId: 15510123,
-    logo: "/logos/ep-logo.jpg",
+    logo: "/logos/bruins.png",
     capacity: 1,
     locationHint: "Workstation near the Yazen area",
   },
