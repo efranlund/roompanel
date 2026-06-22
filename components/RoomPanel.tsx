@@ -47,6 +47,8 @@ export default function RoomPanel({ room }: RoomPanelProps) {
 
   // Poll every 30 seconds
   useEffect(() => {
+    // fetchStatus is async — setState runs after `await`, not synchronously —
+    // so the cascading-render concern this rule guards against does not apply.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStatus();
     const interval = setInterval(fetchStatus, 30_000);
