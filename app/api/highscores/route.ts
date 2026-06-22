@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { validateSubmission, todayStamp, ScoreEntry } from "@/lib/highscores";
+import { validateSubmission, todayStamp, ScoreEntry, LEADERBOARD_SIZE } from "@/lib/highscores";
 import { addScore, getTopScores } from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const scores = await getTopScores(10);
+    const scores = await getTopScores(LEADERBOARD_SIZE);
     return NextResponse.json({ scores });
   } catch (err) {
     const detail = err instanceof Error ? err.message : "Unknown error";
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   try {
     await addScore(entry, randomUUID());
-    const scores = await getTopScores(10);
+    const scores = await getTopScores(LEADERBOARD_SIZE);
     const idx = scores.findIndex(
       (s) => s.name === entry.name && s.score === entry.score && s.date === entry.date
     );

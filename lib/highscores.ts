@@ -3,6 +3,7 @@
 
 export const MAX_NAME_LENGTH = 12;
 export const MAX_SCORE = 1_000_000;
+export const LEADERBOARD_SIZE = 5; // top N shown + the bar a score must beat to make the board
 
 export interface ScoreEntry {
   name: string;
