@@ -6,6 +6,11 @@
   overflow: hidden;
   font-family: var(--font-body);
   user-select: none;
+  -webkit-user-select: none;
+  /* the full-screen jump layer is the tap target — kill the blue tap flash
+     and the long-press text selection/callout it triggers */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   touch-action: manipulation;
 }
 
@@ -119,6 +124,8 @@
 .nameInput {
   flex: 1;
   max-width: 320px;
+  user-select: text;
+  -webkit-user-select: text;
   padding: 16px 18px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.18);
