@@ -9,6 +9,7 @@ import BookingButton from "./BookingButton";
 import FindRoomOverlay from "./FindRoomOverlay";
 import BookingConfirmation from "./BookingConfirmation";
 import HockeyGame from "./HockeyGame";
+import Confetti, { ConfettiHandle } from "./Confetti";
 import styles from "./RoomPanel.module.css";
 
 interface RoomPanelProps {
@@ -22,8 +23,21 @@ export default function RoomPanel({ room }: RoomPanelProps) {
   const [showFindRoom, setShowFindRoom] = useState(false);
   const [showGame, setShowGame] = useState(false);
   const tapTimes = useRef<number[]>([]);
+  const logoRef = useRef<HTMLImageElement>(null);
+  const confettiRef = useRef<ConfettiHandle>(null);
 
   function handleLogoTap() {
+    // tactile press pop + a confetti burst on every tap
+    const el = logoRef.current;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      confettiRef.current?.fire(r.left + r.width / 2, r.top + r.height / 2);
+      el.animate(
+        [{ transform: "scale(1)" }, { transform: "scale(0.85)" }, { transform: "scale(1)" }],
+        { duration: 240, easing: "cubic-bezier(0.34, 1.56, 0.64, 1)" }
+      );
+    }
+
     const now = Date.now();
     tapTimes.current = [...tapTimes.current, now].filter((t) => now - t < 1500);
     if (tapTimes.current.length >= 3) {
@@ -40,20 +54,24 @@ export default function RoomPanel({ room }: RoomPanelProps) {
     }
   }, [room.slug]);
 
+  // Pause the clock while the game is open so its re-renders don't compete
+  // with the game's animation loop (the panel is fully occluded anyway).
   useEffect(() => {
+    if (showGame) return;
     const interval = setInterval(() => setNow(new Date()), 10_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [showGame]);
 
-  // Poll every 30 seconds
+  // Poll every 30 seconds — also paused while the game is open.
   useEffect(() => {
+    if (showGame) return;
     // fetchStatus is async — setState runs after `await`, not synchronously —
     // so the cascading-render concern this rule guards against does not apply.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStatus();
     const interval = setInterval(fetchStatus, 30_000);
     return () => clearInterval(interval);
-  }, [fetchStatus]);
+  }, [fetchStatus, showGame]);
 
   // Full page reload every 5 minutes (safety net)
   useEffect(() => {
@@ -86,6 +104,7 @@ export default function RoomPanel({ room }: RoomPanelProps) {
       <div className={styles.left}>
         <div className={styles.logoContainer}>
           <img
+            ref={logoRef}
             src={room.logo}
             alt={room.name}
             className={styles.logo}
@@ -162,6 +181,7 @@ export default function RoomPanel({ room }: RoomPanelProps) {
       )}
       {bookedUntil && <BookingConfirmation bookedUntil={bookedUntil} />}
       {showGame && <HockeyGame onClose={() => setShowGame(false)} />}
+      <Confetti ref={confettiRef} />
     </div>
   );
 }

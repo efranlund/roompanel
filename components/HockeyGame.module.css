@@ -160,6 +160,12 @@
   margin-bottom: 12px;
 }
 
+.noQualify {
+  color: var(--ep-text-dim);
+  font-size: 18px;
+  margin: 4px 0 14px;
+}
+
 .leaderboard {
   margin: 18px 0 8px;
   text-align: left;

@@ -11,11 +11,16 @@ import {
   ZAMBONI_X,
   ZAMBONI_WIDTH,
   ZAMBONI_HEIGHT,
+  OBSTACLE_TYPES,
 } from "@/lib/game/zamboniGame";
-import { ScoreEntry, MAX_NAME_LENGTH } from "@/lib/highscores";
+import { ScoreEntry, MAX_NAME_LENGTH, LEADERBOARD_SIZE } from "@/lib/highscores";
 import styles from "./HockeyGame.module.css";
 
 const IDLE_TIMEOUT_MS = 45_000;
+// Cap the canvas backing-store width. Panels are fill-rate limited, so
+// rendering above this and letting CSS upscale is wasted GPU work.
+const RENDER_MAX_W = 1440;
+const OBSTACLE_DRAW_SCALE = 1.18; // obstacles drawn a touch larger than their hitbox
 
 type Screen = "playing" | "gameover";
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -45,6 +50,24 @@ function drawSprite(
   if (flip) ctx.scale(-1, 1);
   ctx.drawImage(img, -w / 2, 0, w, h);
   ctx.restore();
+}
+
+// Pre-render a (large) source image into a small offscreen canvas at its draw
+// size — once — so the render loop blits a same-size bitmap instead of
+// resampling the full-resolution source every frame.
+function bakeSprite(img: HTMLImageElement, w: number, h: number, flip: boolean): HTMLCanvasElement {
+  const c = document.createElement("canvas");
+  c.width = Math.ceil(w);
+  c.height = Math.ceil(h);
+  const cx = c.getContext("2d");
+  if (cx) {
+    if (flip) {
+      cx.translate(c.width, 0);
+      cx.scale(-1, 1);
+    }
+    cx.drawImage(img, 0, 0, c.width, c.height);
+  }
+  return c;
 }
 
 // Soft contact shadow on the ice so entities feel grounded.
@@ -94,6 +117,10 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
   const lastTsRef = useRef<number | null>(null);
   const jumpRef = useRef(false);
   const spritesRef = useRef<Record<string, HTMLImageElement>>({});
+  const bakedRef = useRef<Record<string, HTMLCanvasElement>>({});
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const bgGradRef = useRef<CanvasGradient | null>(null);
+  const iceGradRef = useRef<CanvasGradient | null>(null);
   const idleRef = useRef<number>(performance.now());
 
   const [screen, setScreen] = useState<Screen>("playing");
@@ -102,17 +129,19 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
   const [scores, setScores] = useState<ScoreEntry[] | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [savedRank, setSavedRank] = useState<number | null>(null);
+  const [hasJumped, setHasJumped] = useState(false); // hides the "tap to jump" hint after first jump
 
-  const draw = useCallback((ctx: CanvasRenderingContext2D, s: GameState) => {
-    // Transparent canvas — the overlay's EP gradient (same as the app's default
-    // view) shows through above the ice.
-    ctx.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+  const draw = useCallback((s: GameState) => {
+    const ctx = ctxRef.current;
+    if (!ctx || !bgGradRef.current || !iceGradRef.current) return;
+
+    // opaque EP gradient background (same look as the app's default view, but
+    // painted into the canvas so the compositor doesn't alpha-blend each frame)
+    ctx.fillStyle = bgGradRef.current;
+    ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
     // ice surface
-    const ice = ctx.createLinearGradient(0, GROUND_Y, 0, WORLD_HEIGHT);
-    ice.addColorStop(0, "#f6f9fc");
-    ice.addColorStop(1, "#d6e2ef");
-    ctx.fillStyle = ice;
+    ctx.fillStyle = iceGradRef.current;
     ctx.fillRect(0, GROUND_Y, WORLD_WIDTH, WORLD_HEIGHT - GROUND_Y);
 
     // scrolling rink lines (red line cadence, blue otherwise) for a hockey feel
@@ -128,32 +157,34 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
     ctx.fillStyle = "rgba(224,90,71,0.85)";
     ctx.fillRect(0, GROUND_Y - 3, WORLD_WIDTH, 6);
 
-    const getImg = (key: string) => {
-      const im = spritesRef.current[key];
-      return im && im.complete && im.naturalWidth > 0 ? im : null;
-    };
-
-    // obstacles (team logos) — drawn a touch larger than their hitbox, full opacity
+    // obstacles (team logos) — blit the pre-baked bitmap; fall back to the raw
+    // image (then a rect) until the bake is ready.
     for (const o of s.obstacles) {
       const cx = o.x + o.width / 2;
-      const dw = o.width * 1.18;
-      const dh = o.height * 1.18;
+      const dw = o.width * OBSTACLE_DRAW_SCALE;
+      const dh = o.height * OBSTACLE_DRAW_SCALE;
       drawContactShadow(ctx, cx, GROUND_Y, dw);
-      const img = getImg(o.sprite);
-      if (img) {
-        drawSprite(ctx, img, cx, GROUND_Y + 2, dw, dh, false);
+      const baked = bakedRef.current[o.sprite];
+      const raw = spritesRef.current[o.sprite];
+      if (baked) {
+        ctx.drawImage(baked, cx - dw / 2, GROUND_Y + 2 - dh);
+      } else if (raw && raw.complete && raw.naturalWidth > 0) {
+        drawSprite(ctx, raw, cx, GROUND_Y + 2, dw, dh, false);
       } else {
         ctx.fillStyle = "rgba(255,255,255,0.85)";
         ctx.fillRect(cx - o.width / 2, GROUND_Y - o.height, o.width, o.height);
       }
     }
 
-    // the zamboni — sprite art faces left, so flip it to face right (into play)
+    // the zamboni — pre-baked already mirrored to face right (into play)
     const zcx = ZAMBONI_X + ZAMBONI_WIDTH / 2;
     drawContactShadow(ctx, zcx, GROUND_Y, ZAMBONI_WIDTH);
-    const z = getImg("zamboni");
-    if (z) {
-      drawSprite(ctx, z, zcx, GROUND_Y - s.y + 24, ZAMBONI_DRAW, ZAMBONI_DRAW, true);
+    const zBaked = bakedRef.current.zamboni;
+    const zRaw = spritesRef.current.zamboni;
+    if (zBaked) {
+      ctx.drawImage(zBaked, zcx - ZAMBONI_DRAW / 2, GROUND_Y - s.y + 24 - ZAMBONI_DRAW);
+    } else if (zRaw && zRaw.complete && zRaw.naturalWidth > 0) {
+      drawSprite(ctx, zRaw, zcx, GROUND_Y - s.y + 24, ZAMBONI_DRAW, ZAMBONI_DRAW, true);
     } else {
       ctx.fillStyle = "#e05a47";
       ctx.fillRect(ZAMBONI_X, GROUND_Y - s.y - ZAMBONI_HEIGHT, ZAMBONI_WIDTH, ZAMBONI_HEIGHT);
@@ -183,8 +214,7 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
 
   const loop = useCallback(
     (ts: number) => {
-      const ctx = canvasRef.current?.getContext("2d");
-      if (!ctx) return;
+      if (!ctxRef.current) return;
       const last = lastTsRef.current ?? ts;
       const dt = ts - last;
       lastTsRef.current = ts;
@@ -196,7 +226,7 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
       const next = step(stateRef.current, dt, jump);
       stateRef.current = next;
 
-      draw(ctx, next);
+      draw(next);
       if (scoreRef.current) scoreRef.current.textContent = String(next.score);
 
       if (next.status === "gameover") {
@@ -215,6 +245,7 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
     idleRef.current = performance.now();
     setScreen("playing");
     setScore(0);
+    setHasJumped(false);
     setName("");
     setScores(null);
     setSaveState("idle");
@@ -224,18 +255,56 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
     rafRef.current = requestAnimationFrame(loop);
   }, [loop]);
 
-  // mount: size canvas for DPR, preload sprites, start the loop
+  // mount: size canvas (capped for fill-rate), build cached gradients, bake
+  // sprites, start the loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = WORLD_WIDTH * dpr;
-    canvas.height = WORLD_HEIGHT * dpr;
-    const ctx = canvas.getContext("2d");
-    if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    // Render into a capped backing store and let CSS upscale to the panel.
+    // Sized to the WORLD aspect so coordinates map cleanly.
+    const displayW = canvas.clientWidth || window.innerWidth || WORLD_WIDTH;
+    const dpr = window.devicePixelRatio || 1;
+    const backW = Math.min(RENDER_MAX_W, Math.round(displayW * dpr));
+    const backH = Math.round((backW * WORLD_HEIGHT) / WORLD_WIDTH);
+    canvas.width = backW;
+    canvas.height = backH;
+
+    // Opaque context — no per-frame alpha compositing with the layer below.
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) return;
+    ctx.setTransform(backW / WORLD_WIDTH, 0, 0, backH / WORLD_HEIGHT, 0, 0);
+    ctxRef.current = ctx;
+
+    // Build gradients once (recreating them every frame is wasteful).
+    const bg = ctx.createLinearGradient(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    bg.addColorStop(0, "#1a1e2e");
+    bg.addColorStop(0.4, "#2a1f2e");
+    bg.addColorStop(1, "#e05a47");
+    bgGradRef.current = bg;
+    const ice = ctx.createLinearGradient(0, GROUND_Y, 0, WORLD_HEIGHT);
+    ice.addColorStop(0, "#f6f9fc");
+    ice.addColorStop(1, "#d6e2ef");
+    iceGradRef.current = ice;
+
+    // Load each sprite and bake it to its draw size once it's ready.
     for (const [key, src] of Object.entries(SPRITE_SOURCES)) {
       const img = new Image();
+      img.onload = () => {
+        if (key === "zamboni") {
+          bakedRef.current.zamboni = bakeSprite(img, ZAMBONI_DRAW, ZAMBONI_DRAW, true);
+        } else {
+          const type = OBSTACLE_TYPES.find((t) => t.sprite === key);
+          if (type) {
+            bakedRef.current[key] = bakeSprite(
+              img,
+              type.width * OBSTACLE_DRAW_SCALE,
+              type.height * OBSTACLE_DRAW_SCALE,
+              false
+            );
+          }
+        }
+      };
       img.src = src;
       spritesRef.current[key] = img;
     }
@@ -253,7 +322,10 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
       if (e.code === "Space" || e.key === " ") {
         e.preventDefault();
         idleRef.current = performance.now();
-        if (screen === "playing") jumpRef.current = true;
+        if (screen === "playing") {
+          jumpRef.current = true;
+          setHasJumped(true);
+        }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -289,6 +361,12 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
     }
   }, [name, score]);
 
+  // Does this run make the board? True if it's not full yet, or it beats the
+  // lowest score currently on it. Only then do we ask for a name.
+  const qualifies =
+    scores !== null &&
+    (scores.length < LEADERBOARD_SIZE || score > scores[scores.length - 1].score);
+
   return (
     <div
       className={styles.overlay}
@@ -308,6 +386,7 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
             e.preventDefault();
             idleRef.current = performance.now();
             jumpRef.current = true;
+            setHasJumped(true);
           }}
         >
           <div className={styles.hud}>
@@ -316,7 +395,7 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
               0
             </span>
           </div>
-          <div className={styles.hint}>TAP TO JUMP</div>
+          {!hasJumped && <div className={styles.hint}>TAP TO JUMP</div>}
         </div>
       )}
 
@@ -326,25 +405,31 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
             <h2 className={styles.goTitle}>GAME OVER</h2>
             <div className={styles.finalScore}>{score}</div>
 
-            {saveState !== "saved" && (
-              <div className={styles.saveRow}>
-                <input
-                  className={styles.nameInput}
-                  value={name}
-                  onChange={(e) => setName(e.target.value.slice(0, MAX_NAME_LENGTH))}
-                  placeholder="YOUR NAME"
-                  maxLength={MAX_NAME_LENGTH}
-                  autoFocus
-                />
-                <button
-                  className={styles.saveBtn}
-                  onClick={handleSave}
-                  disabled={!name.trim() || saveState === "saving"}
-                >
-                  {saveState === "saving" ? "SAVING…" : "SAVE"}
-                </button>
-              </div>
-            )}
+            {saveState !== "saved" &&
+              scores !== null &&
+              (qualifies ? (
+                <div className={styles.saveRow}>
+                  <input
+                    className={styles.nameInput}
+                    value={name}
+                    onChange={(e) => setName(e.target.value.slice(0, MAX_NAME_LENGTH))}
+                    placeholder="YOUR NAME"
+                    maxLength={MAX_NAME_LENGTH}
+                    autoFocus
+                  />
+                  <button
+                    className={styles.saveBtn}
+                    onClick={handleSave}
+                    disabled={!name.trim() || saveState === "saving"}
+                  >
+                    {saveState === "saving" ? "SAVING…" : "SAVE"}
+                  </button>
+                </div>
+              ) : (
+                <p className={styles.noQualify}>
+                  Not in the top {LEADERBOARD_SIZE} — give it another go!
+                </p>
+              ))}
             {saveState === "error" && (
               <p className={styles.errorMsg}>Couldn&apos;t save — try again.</p>
             )}
