@@ -35,7 +35,9 @@ export const OBSTACLE_TYPES: ObstacleType[] = [
   { sprite: "red-wings", width: 144, height: 90 },
 ];
 
-export const MAX_OBSTACLE_WIDTH = 144;
+// Derived so the "spawns are always clearable" invariant (see requiredGap)
+// maintains itself when obstacle types change.
+export const MAX_OBSTACLE_WIDTH = Math.max(...OBSTACLE_TYPES.map((t) => t.width));
 
 export interface Obstacle {
   x: number; // left edge in world px
