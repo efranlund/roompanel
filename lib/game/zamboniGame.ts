@@ -15,10 +15,16 @@ export const HITBOX_INSET = 22; // forgiving collision margin on the zamboni
 export const OBSTACLE_HITBOX_INSET = 18; // logos are round with padding — be lenient
 
 export const START_SPEED = 600; // px/s
-export const MAX_SPEED = 1500; // px/s
-export const SPEED_RAMP = 22; // px/s added per second of play
-export const SCORE_DIVISOR = 14; // world px per point
+export const SPEED_RAMP = 75; // px/s added per second — steep, so the reaction window collapses fast
+export const SCORE_DIVISOR = 24; // world px per point — calibrated so ~5k ≈ 49s (very hard), ~10k ≈ 72s (near-impossible)
 export const MAX_DT_MS = 50; // clamp big frame gaps (tab switch etc.)
+export const SUBSTEP_MAX_PX = 28; // max world travel per integration step (anti-tunneling)
+export const CLUSTER_MIN_SPEED = 1000; // clusters only once a jump has room to span a pair
+export const CLUSTER_MAX_CHANCE = 0.5; // at most half of spawns become clusters
+export const CLUSTER_INNER_GAP = 90; // px between adjacent obstacles in a cluster — reads as distinct, still one-jump clearable
+export const CLUSTER_CLEAR_WINDOW = 0.66; // seconds the jump stays high enough to clear obstacles (conservative)
+export const CLUSTER_MAX_SIZE = 6; // sanity ceiling on obstacles per cluster
+export const CLUSTER_POINTS_PER_EXTRA = 2000; // +1 obstacle per this many points (base pair = 2)
 
 export interface ObstacleType {
   sprite: string; // image key under /public/logos (see HockeyGame sprite map)
@@ -74,8 +80,10 @@ export function nextRandom(seed: number): { value: number; seed: number } {
 const JUMP_AIRTIME = (2 * JUMP_VELOCITY) / GRAVITY;
 
 export function requiredGap(speed: number): number {
-  // enough horizontal room to clear one obstacle and land before the next
-  return speed * JUMP_AIRTIME * 1.25 + MAX_OBSTACLE_WIDTH;
+  // Minimum jumpable gap: one jump's airtime of travel (+ a tiny safety
+  // margin) plus the widest obstacle. The 1.02 margin packs obstacles right up
+  // against the limit of what a single jump can clear.
+  return speed * JUMP_AIRTIME * 1.02 + MAX_OBSTACLE_WIDTH;
 }
 
 export function createInitialState(seed: number): GameState {
@@ -115,7 +123,24 @@ export function step(state: GameState, dtMs: number, jump: boolean): GameState {
   const dt = Math.max(0, Math.min(dtMs, MAX_DT_MS)) / 1000;
   if (dt === 0) return state;
 
-  const speed = Math.min(MAX_SPEED, state.speed + SPEED_RAMP * dt);
+  // Speed never caps, so at high speed a single frame could move an obstacle
+  // clear past the zamboni between collision checks (tunneling). Split the
+  // frame so no integration step advances the world more than SUBSTEP_MAX_PX.
+  const projectedSpeed = state.speed + SPEED_RAMP * dt;
+  const substeps = Math.max(1, Math.ceil((projectedSpeed * dt) / SUBSTEP_MAX_PX));
+  const sdt = dt / substeps;
+
+  let cur = state;
+  for (let i = 0; i < substeps; i++) {
+    cur = advance(cur, sdt, i === 0 && jump);
+    if (cur.status === "gameover") break;
+  }
+  return cur;
+}
+
+// One fixed-size integration step. `dt` is in seconds and already clamped.
+function advance(state: GameState, dt: number, jump: boolean): GameState {
+  const speed = state.speed + SPEED_RAMP * dt; // no cap — difficulty never plateaus
 
   // vertical motion
   let y = state.y;
@@ -144,10 +169,51 @@ export function step(state: GameState, dtMs: number, jump: boolean): GameState {
     seed = pick.seed;
     const type = OBSTACLE_TYPES[Math.floor(pick.value * OBSTACLE_TYPES.length)];
     obstacles.push({ x: WORLD_WIDTH + 40, width: type.width, height: type.height, sprite: type.sprite });
+
+    // Cluster: occasionally spawn a group of tightly-packed obstacles right
+    // behind the first, clearable in one well-timed jump. Chance ramps in with
+    // speed (so the jump arc has room to span them); capped so it never becomes
+    // every spawn.
+    const clusterChance = Math.min(
+      CLUSTER_MAX_CHANCE,
+      Math.max(0, (speed - CLUSTER_MIN_SPEED) / 4000)
+    );
+    const clusterRoll = nextRandom(seed);
+    seed = clusterRoll.seed;
+    if (clusterRoll.value < clusterChance) {
+      // Group grows with score (+1 obstacle per CLUSTER_POINTS_PER_EXTRA beyond
+      // the base pair), bounded by what a single jump can physically span at
+      // this speed and by a sane ceiling.
+      const clearMax = Math.floor(
+        (CLUSTER_CLEAR_WINDOW * speed - ZAMBONI_WIDTH + CLUSTER_INNER_GAP) /
+          (MAX_OBSTACLE_WIDTH + CLUSTER_INNER_GAP)
+      );
+      const scoreMax = 2 + Math.floor(state.score / CLUSTER_POINTS_PER_EXTRA);
+      const maxSize = Math.max(2, Math.min(scoreMax, clearMax, CLUSTER_MAX_SIZE));
+      const sizeRoll = nextRandom(seed);
+      seed = sizeRoll.seed;
+      const groupSize = 2 + Math.floor(sizeRoll.value * (maxSize - 1)); // [2, maxSize]
+
+      let cx = WORLD_WIDTH + 40 + type.width + CLUSTER_INNER_GAP;
+      for (let k = 1; k < groupSize; k++) {
+        const pk = nextRandom(seed);
+        seed = pk.seed;
+        const tk = OBSTACLE_TYPES[Math.floor(pk.value * OBSTACLE_TYPES.length)];
+        obstacles.push({ x: cx, width: tk.width, height: tk.height, sprite: tk.sprite });
+        cx += tk.width + CLUSTER_INNER_GAP;
+      }
+    }
+
     distanceSinceSpawn = 0;
     const extra = nextRandom(seed);
     seed = extra.seed;
-    nextGap = requiredGap(speed) + extra.value * speed * 0.6;
+    // Difficulty ramp: the random "breather" beyond the jumpable minimum
+    // shrinks as speed climbs, so the *time* between obstacles tightens the
+    // faster you go. Without this, gaps scale with speed and the time window
+    // stays constant — the game looks quicker but never gets harder.
+    const ramp = Math.min(1, (speed - START_SPEED) / 1800);
+    const breather = 0.4 - 0.34 * ramp; // 0.4×speed early → 0.06×speed late (tight)
+    nextGap = requiredGap(speed) + extra.value * speed * breather;
   }
 
   const distance = state.distance + speed * dt;
