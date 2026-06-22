@@ -9,9 +9,10 @@ export const GROUND_Y = 980; // y of the ice surface the player/obstacles rest o
 export const GRAVITY = 2600; // px/s^2 (downward)
 export const JUMP_VELOCITY = 1150; // px/s (initial upward impulse)
 export const ZAMBONI_X = 320; // fixed horizontal position of the player
-export const ZAMBONI_WIDTH = 120;
-export const ZAMBONI_HEIGHT = 100;
-export const HITBOX_INSET = 16; // forgiving collision margin
+export const ZAMBONI_WIDTH = 170; // matches the wide zamboni sprite
+export const ZAMBONI_HEIGHT = 110;
+export const HITBOX_INSET = 22; // forgiving collision margin on the zamboni
+export const OBSTACLE_HITBOX_INSET = 18; // logos are round with padding — be lenient
 
 export const START_SPEED = 600; // px/s
 export const MAX_SPEED = 1500; // px/s
@@ -20,25 +21,27 @@ export const SCORE_DIVISOR = 14; // world px per point
 export const MAX_DT_MS = 50; // clamp big frame gaps (tab switch etc.)
 
 export interface ObstacleType {
-  emoji: string;
+  sprite: string; // image key under /public/logos (see HockeyGame sprite map)
   width: number;
   height: number;
 }
 
+// Obstacles are the meeting rooms' team logos — sized big enough to read at a
+// glance, widths follow each logo's aspect ratio.
 export const OBSTACLE_TYPES: ObstacleType[] = [
-  { emoji: "🧹", width: 72, height: 64 }, // stray stick
-  { emoji: "⚫", width: 60, height: 50 }, // puck pile
-  { emoji: "🔶", width: 64, height: 70 }, // cone
-  { emoji: "🚧", width: 84, height: 66 }, // ice crack / barrier
+  { sprite: "maple-leafs", width: 92, height: 102 },
+  { sprite: "bruins", width: 100, height: 100 },
+  { sprite: "blackhawks", width: 114, height: 100 },
+  { sprite: "red-wings", width: 144, height: 90 },
 ];
 
-export const MAX_OBSTACLE_WIDTH = 84;
+export const MAX_OBSTACLE_WIDTH = 144;
 
 export interface Obstacle {
   x: number; // left edge in world px
   width: number;
   height: number;
-  emoji: string;
+  sprite: string;
 }
 
 export type GameStatus = "playing" | "gameover";
@@ -94,10 +97,10 @@ export function collides(state: GameState): boolean {
   const zBottom = GROUND_Y - state.y - HITBOX_INSET;
   const zTop = GROUND_Y - state.y - ZAMBONI_HEIGHT + HITBOX_INSET;
   for (const o of state.obstacles) {
-    const oLeft = o.x;
-    const oRight = o.x + o.width;
+    const oLeft = o.x + OBSTACLE_HITBOX_INSET;
+    const oRight = o.x + o.width - OBSTACLE_HITBOX_INSET;
     const oBottom = GROUND_Y;
-    const oTop = GROUND_Y - o.height;
+    const oTop = GROUND_Y - o.height + 14;
     if (zLeft < oRight && zRight > oLeft && zTop < oBottom && zBottom > oTop) {
       return true;
     }
@@ -138,7 +141,7 @@ export function step(state: GameState, dtMs: number, jump: boolean): GameState {
     const pick = nextRandom(seed);
     seed = pick.seed;
     const type = OBSTACLE_TYPES[Math.floor(pick.value * OBSTACLE_TYPES.length)];
-    obstacles.push({ x: WORLD_WIDTH + 40, width: type.width, height: type.height, emoji: type.emoji });
+    obstacles.push({ x: WORLD_WIDTH + 40, width: type.width, height: type.height, sprite: type.sprite });
     distanceSinceSpawn = 0;
     const extra = nextRandom(seed);
     seed = extra.seed;

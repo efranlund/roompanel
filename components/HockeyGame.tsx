@@ -19,23 +19,41 @@ const IDLE_TIMEOUT_MS = 45_000;
 
 type Screen = "playing" | "gameover";
 type SaveState = "idle" | "saving" | "saved" | "error";
-interface Snowflake { x: number; y: number; r: number; s: number }
+const ZAMBONI_DRAW = 172; // square draw size for the zamboni sprite
 
-function drawEmoji(
+// The zamboni + each meeting room's team logo (logos double as obstacles).
+const SPRITE_SOURCES: Record<string, string> = {
+  zamboni: "/zamboni.png",
+  "maple-leafs": "/logos/maple-leafs.png",
+  bruins: "/logos/bruins.png",
+  blackhawks: "/logos/blackhawks.png",
+  "red-wings": "/logos/red-wings.png",
+};
+
+// Draw an image anchored by the centre of its bottom edge, optionally mirrored.
+function drawSprite(
   ctx: CanvasRenderingContext2D,
-  emoji: string,
+  img: HTMLImageElement,
   centerX: number,
-  baselineY: number,
-  size: number
+  bottomY: number,
+  w: number,
+  h: number,
+  flip: boolean
 ) {
   ctx.save();
-  ctx.font = `${size}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
-  ctx.shadowColor = "rgba(0,0,0,0.25)";
-  ctx.shadowBlur = 8;
-  ctx.shadowOffsetY = 4;
-  ctx.fillText(emoji, centerX, baselineY);
+  ctx.translate(centerX, bottomY - h);
+  if (flip) ctx.scale(-1, 1);
+  ctx.drawImage(img, -w / 2, 0, w, h);
+  ctx.restore();
+}
+
+// Soft contact shadow on the ice so entities feel grounded.
+function drawContactShadow(ctx: CanvasRenderingContext2D, centerX: number, groundY: number, w: number) {
+  ctx.save();
+  ctx.fillStyle = "rgba(20,30,50,0.16)";
+  ctx.beginPath();
+  ctx.ellipse(centerX, groundY + 8, w * 0.42, 11, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 
@@ -75,7 +93,7 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
   const rafRef = useRef<number | null>(null);
   const lastTsRef = useRef<number | null>(null);
   const jumpRef = useRef(false);
-  const snowRef = useRef<Snowflake[]>([]);
+  const spritesRef = useRef<Record<string, HTMLImageElement>>({});
   const idleRef = useRef<number>(performance.now());
 
   const [screen, setScreen] = useState<Screen>("playing");
@@ -86,55 +104,60 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
   const [savedRank, setSavedRank] = useState<number | null>(null);
 
   const draw = useCallback((ctx: CanvasRenderingContext2D, s: GameState) => {
-    // sky / rink backdrop
-    const sky = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
-    sky.addColorStop(0, "#0f1830");
-    sky.addColorStop(0.55, "#16335c");
-    sky.addColorStop(1, "#1e4f8a");
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    // Transparent canvas — the overlay's EP gradient (same as the app's default
+    // view) shows through above the ice.
+    ctx.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
     // ice surface
     const ice = ctx.createLinearGradient(0, GROUND_Y, 0, WORLD_HEIGHT);
-    ice.addColorStop(0, "#dfeefc");
-    ice.addColorStop(1, "#a9cdf0");
+    ice.addColorStop(0, "#f6f9fc");
+    ice.addColorStop(1, "#d6e2ef");
     ctx.fillStyle = ice;
     ctx.fillRect(0, GROUND_Y, WORLD_WIDTH, WORLD_HEIGHT - GROUND_Y);
 
+    // scrolling rink lines (red line cadence, blue otherwise) for a hockey feel
+    const period = 360;
+    let idx = Math.floor(s.distance / period);
+    for (let x = -(s.distance % period); x < WORLD_WIDTH + period; x += period) {
+      ctx.fillStyle = idx % 4 === 0 ? "rgba(214,48,38,0.5)" : "rgba(36,84,196,0.3)";
+      ctx.fillRect(x, GROUND_Y + 6, 8, WORLD_HEIGHT - GROUND_Y);
+      idx++;
+    }
+
     // boards line (coral accent)
-    ctx.strokeStyle = "rgba(224,90,71,0.7)";
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(0, GROUND_Y);
-    ctx.lineTo(WORLD_WIDTH, GROUND_Y);
-    ctx.stroke();
+    ctx.fillStyle = "rgba(224,90,71,0.85)";
+    ctx.fillRect(0, GROUND_Y - 3, WORLD_WIDTH, 6);
 
-    // scrolling dashed centre line on the ice
-    const offset = s.distance % 240;
-    ctx.strokeStyle = "rgba(255,255,255,0.25)";
-    ctx.lineWidth = 4;
-    for (let x = -offset; x < WORLD_WIDTH; x += 240) {
-      ctx.beginPath();
-      ctx.moveTo(x, GROUND_Y + 70);
-      ctx.lineTo(x + 120, GROUND_Y + 70);
-      ctx.stroke();
-    }
+    const getImg = (key: string) => {
+      const im = spritesRef.current[key];
+      return im && im.complete && im.naturalWidth > 0 ? im : null;
+    };
 
-    // drifting snow
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
-    for (const f of snowRef.current) {
-      ctx.beginPath();
-      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // obstacles
+    // obstacles (team logos) — drawn a touch larger than their hitbox, full opacity
     for (const o of s.obstacles) {
-      drawEmoji(ctx, o.emoji, o.x + o.width / 2, GROUND_Y, o.height);
+      const cx = o.x + o.width / 2;
+      const dw = o.width * 1.18;
+      const dh = o.height * 1.18;
+      drawContactShadow(ctx, cx, GROUND_Y, dw);
+      const img = getImg(o.sprite);
+      if (img) {
+        drawSprite(ctx, img, cx, GROUND_Y + 2, dw, dh, false);
+      } else {
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.fillRect(cx - o.width / 2, GROUND_Y - o.height, o.width, o.height);
+      }
     }
 
-    // the zamboni
-    drawEmoji(ctx, "🚜", ZAMBONI_X + ZAMBONI_WIDTH / 2, GROUND_Y - s.y, ZAMBONI_HEIGHT);
+    // the zamboni — sprite art faces left, so flip it to face right (into play)
+    const zcx = ZAMBONI_X + ZAMBONI_WIDTH / 2;
+    drawContactShadow(ctx, zcx, GROUND_Y, ZAMBONI_WIDTH);
+    const z = getImg("zamboni");
+    if (z) {
+      drawSprite(ctx, z, zcx, GROUND_Y - s.y + 24, ZAMBONI_DRAW, ZAMBONI_DRAW, true);
+    } else {
+      ctx.fillStyle = "#e05a47";
+      ctx.fillRect(ZAMBONI_X, GROUND_Y - s.y - ZAMBONI_HEIGHT, ZAMBONI_WIDTH, ZAMBONI_HEIGHT);
+    }
   }, []);
 
   const fetchScores = useCallback(async () => {
@@ -173,14 +196,6 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
       const next = step(stateRef.current, dt, jump);
       stateRef.current = next;
 
-      // drift snow
-      for (const f of snowRef.current) {
-        f.y += f.s * (dt / 16);
-        f.x -= next.speed * 0.12 * (dt / 1000);
-        if (f.y > WORLD_HEIGHT) f.y = -10;
-        if (f.x < 0) f.x = WORLD_WIDTH;
-      }
-
       draw(ctx, next);
       if (scoreRef.current) scoreRef.current.textContent = String(next.score);
 
@@ -209,7 +224,7 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
     rafRef.current = requestAnimationFrame(loop);
   }, [loop]);
 
-  // mount: size canvas for DPR, seed snow, start the loop
+  // mount: size canvas for DPR, preload sprites, start the loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -219,12 +234,11 @@ export default function HockeyGame({ onClose }: { onClose: () => void }) {
     const ctx = canvas.getContext("2d");
     if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    snowRef.current = Array.from({ length: 40 }, (_, i) => ({
-      x: (i * 137) % WORLD_WIDTH,
-      y: (i * 89) % WORLD_HEIGHT,
-      r: 1 + (i % 3),
-      s: 0.4 + (i % 5) * 0.18,
-    }));
+    for (const [key, src] of Object.entries(SPRITE_SOURCES)) {
+      const img = new Image();
+      img.src = src;
+      spritesRef.current[key] = img;
+    }
 
     start();
     return () => {

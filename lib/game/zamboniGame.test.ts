@@ -101,7 +101,7 @@ describe("spawning", () => {
 describe("collision", () => {
   it("ends the game when an obstacle overlaps the grounded zamboni", () => {
     const base = createInitialState(1);
-    const obstacle: Obstacle = { x: ZAMBONI_X, width: 70, height: 64, emoji: "🧹" };
+    const obstacle: Obstacle = { x: ZAMBONI_X, width: 100, height: 100, sprite: "bruins" };
     const s: GameState = { ...base, obstacles: [obstacle] };
     expect(collides(s)).toBe(true);
     expect(step(s, FRAME, false).status).toBe("gameover");
@@ -109,7 +109,7 @@ describe("collision", () => {
 
   it("does not collide when the zamboni has jumped above the obstacle", () => {
     const base = createInitialState(1);
-    const obstacle: Obstacle = { x: ZAMBONI_X, width: 70, height: 64, emoji: "🧹" };
+    const obstacle: Obstacle = { x: ZAMBONI_X, width: 100, height: 100, sprite: "bruins" };
     const s: GameState = { ...base, y: 300, obstacles: [obstacle] };
     expect(collides(s)).toBe(false);
     expect(step(s, FRAME, false).status).toBe("playing");
