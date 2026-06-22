@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Room, RoomStatus } from "@/lib/types";
 import StatusPill from "./StatusPill";
 import MeetingCard from "./MeetingCard";
@@ -8,6 +8,7 @@ import CurrentMeeting from "./CurrentMeeting";
 import BookingButton from "./BookingButton";
 import FindRoomOverlay from "./FindRoomOverlay";
 import BookingConfirmation from "./BookingConfirmation";
+import HockeyGame from "./HockeyGame";
 import styles from "./RoomPanel.module.css";
 
 interface RoomPanelProps {
@@ -19,6 +20,17 @@ export default function RoomPanel({ room }: RoomPanelProps) {
   const [status, setStatus] = useState<RoomStatus | null>(null);
   const [bookedUntil, setBookedUntil] = useState<string | null>(null);
   const [showFindRoom, setShowFindRoom] = useState(false);
+  const [showGame, setShowGame] = useState(false);
+  const tapTimes = useRef<number[]>([]);
+
+  function handleLogoTap() {
+    const now = Date.now();
+    tapTimes.current = [...tapTimes.current, now].filter((t) => now - t < 1500);
+    if (tapTimes.current.length >= 3) {
+      tapTimes.current = [];
+      setShowGame(true);
+    }
+  }
 
   const fetchStatus = useCallback(async () => {
     const res = await fetch(`/api/calendar/${room.slug}`);
@@ -35,6 +47,7 @@ export default function RoomPanel({ room }: RoomPanelProps) {
 
   // Poll every 30 seconds
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStatus();
     const interval = setInterval(fetchStatus, 30_000);
     return () => clearInterval(interval);
@@ -70,7 +83,13 @@ export default function RoomPanel({ room }: RoomPanelProps) {
     <div className={`${styles.panel} ${isAvailable ? styles.available : styles.occupied}`}>
       <div className={styles.left}>
         <div className={styles.logoContainer}>
-          <img src={room.logo} alt={room.name} className={styles.logo} />
+          <img
+            src={room.logo}
+            alt={room.name}
+            className={styles.logo}
+            onClick={handleLogoTap}
+            style={{ cursor: "pointer" }}
+          />
         </div>
         <h1 className={styles.roomName}>{room.name.toUpperCase()}</h1>
         <p className={styles.roomLocation}>{room.location}</p>
@@ -140,6 +159,7 @@ export default function RoomPanel({ room }: RoomPanelProps) {
         />
       )}
       {bookedUntil && <BookingConfirmation bookedUntil={bookedUntil} />}
+      {showGame && <HockeyGame onClose={() => setShowGame(false)} />}
     </div>
   );
 }
